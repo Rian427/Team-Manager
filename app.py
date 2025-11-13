@@ -1,11 +1,21 @@
 import tkinter as tk
 
+# Data
+
+USUARIOS = {"admin": "123"}
+CARGOS = ["CEO", "Gerente", "Assistente"]
+FUNCIONARIOS = [
+    {"nome": "Lucas Goulart", "cargo": "CEO", "nascimento": "10/02/1980"}
+]
+
+# App
+
 class TeamManagerApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.title("Team Manager")
-        self.geometry("500x400")
+        self.geometry("550x420")
         self.resizable(False, False)
 
         self.current_frame = None
@@ -32,6 +42,7 @@ class TeamManagerApp(tk.Tk):
     def show_gestao(self):
         self.switch_frame(GestaoFrame)
 
+# Screens
 
 class LoginFrame(tk.Frame):
     def __init__(self, master):
@@ -47,8 +58,22 @@ class LoginFrame(tk.Frame):
         self.entry_pass = tk.Entry(self, show="*")
         self.entry_pass.pack()
 
+        enter_action = lambda event=None: self.try_login(master)
+
         tk.Button(self, text="Entrar",
-                  command=master.show_menu).pack(pady=15)
+                  command=lambda: self.try_login(master)).pack(pady=15)
+
+        self.entry_user.bind("<Return>", enter_action)
+        self.entry_pass.bind("<Return>", enter_action)
+
+    def try_login(self, master):
+        user = self.entry_user.get()
+        pwd = self.entry_pass.get()
+
+        if user in USUARIOS and USUARIOS[user] == pwd:
+            master.show_menu()
+        else:
+            tk.Label(self, text="Credenciais inválidas.", fg="red").pack()
 
 
 class MenuFrame(tk.Frame):
@@ -57,17 +82,17 @@ class MenuFrame(tk.Frame):
 
         tk.Label(self, text="Menu Principal", font=("Arial", 18, "bold")).pack(pady=20)
 
-        tk.Button(self, text="Cadastro de Funcionário",
-                  width=25, command=master.show_cadastro).pack(pady=5)
+        tk.Button(self, text="Cadastro de Funcionário", width=30,
+                  command=master.show_cadastro).pack(pady=5)
 
-        tk.Button(self, text="Criação de Cargo",
-                  width=25, command=master.show_criar_cargo).pack(pady=5)
+        tk.Button(self, text="Criação de Cargo", width=30,
+                  command=master.show_criar_cargo).pack(pady=5)
 
-        tk.Button(self, text="Gestão de Funcionários",
-                  width=25, command=master.show_gestao).pack(pady=5)
+        tk.Button(self, text="Gestão de Funcionários", width=30,
+                  command=master.show_gestao).pack(pady=5)
 
-        tk.Button(self, text="Sair",
-                  width=25, command=master.show_login).pack(pady=20)
+        tk.Button(self, text="Sair", width=30,
+                  command=master.show_login).pack(pady=20)
 
 
 class CadastroFrame(tk.Frame):
@@ -77,19 +102,38 @@ class CadastroFrame(tk.Frame):
         tk.Label(self, text="Cadastro de Funcionário", font=("Arial", 16, "bold")).pack(pady=15)
 
         tk.Label(self, text="Nome completo").pack()
-        tk.Entry(self).pack()
+        self.nome = tk.Entry(self)
+        self.nome.pack()
 
         tk.Label(self, text="Cargo").pack()
-        tk.Entry(self).pack()
+        self.cargo = tk.Entry(self)
+        self.cargo.pack()
 
         tk.Label(self, text="Data de nascimento").pack()
-        tk.Entry(self).pack()
+        self.nascimento = tk.Entry(self)
+        self.nascimento.pack()
 
-        tk.Label(self, text="Senha").pack()
-        tk.Entry(self, show="*").pack()
+        tk.Button(self, text="Cadastrar", command=self.cadastrar).pack(pady=10)
 
-        tk.Button(self, text="Voltar",
-                  command=master.show_menu).pack(pady=15)
+        tk.Button(self, text="Voltar", command=master.show_menu).pack()
+
+        self.bind_all("<Return>", lambda event: self.cadastrar())
+
+    def cadastrar(self):
+        nome = self.nome.get()
+        cargo = self.cargo.get()
+        nasc = self.nascimento.get()
+
+        if nome and cargo and nasc:
+            FUNCIONARIOS.append({
+                "nome": nome,
+                "cargo": cargo,
+                "nascimento": nasc
+            })
+
+            tk.Label(self, text="Funcionário cadastrado!", fg="green").pack()
+        else:
+            tk.Label(self, text="Preencha todos os campos!", fg="red").pack()
 
 
 class CriarCargoFrame(tk.Frame):
@@ -98,11 +142,24 @@ class CriarCargoFrame(tk.Frame):
 
         tk.Label(self, text="Criação de Cargo", font=("Arial", 16, "bold")).pack(pady=20)
 
-        tk.Label(self, text="Nome do cargo").pack()
-        tk.Entry(self).pack()
+        tk.Label(self, text="Nome do novo cargo").pack()
+        self.cargo = tk.Entry(self)
+        self.cargo.pack()
 
-        tk.Button(self, text="Voltar",
-                  command=master.show_menu).pack(pady=15)
+        tk.Button(self, text="Criar Cargo", command=self.criar).pack(pady=10)
+
+        tk.Button(self, text="Voltar", command=master.show_menu).pack()
+
+        self.bind_all("<Return>", lambda event: self.criar())
+
+    def criar(self):
+        nome = self.cargo.get()
+
+        if nome and nome not in CARGOS:
+            CARGOS.append(nome)
+            tk.Label(self, text="Cargo criado!", fg="green").pack()
+        else:
+            tk.Label(self, text="Cargo inválido ou já existente.", fg="red").pack()
 
 
 class GestaoFrame(tk.Frame):
@@ -111,11 +168,16 @@ class GestaoFrame(tk.Frame):
 
         tk.Label(self, text="Gestão de Funcionários", font=("Arial", 16, "bold")).pack(pady=20)
 
-        tk.Label(self, text="(Área para listagem de funcionários futuramente)").pack(pady=10)
+        box = tk.Frame(self)
+        box.pack()
 
-        tk.Button(self, text="Voltar",
-                  command=master.show_menu).pack(pady=15)
+        for f in FUNCIONARIOS:
+            tk.Label(box, text=f"{f['nome']} | {f['cargo']} | {f['nascimento']}").pack()
 
+        tk.Button(self, text="Voltar", command=master.show_menu).pack(pady=15)
+
+
+# Execution
 
 if __name__ == "__main__":
     app = TeamManagerApp()
