@@ -46,8 +46,8 @@ def criar_cargo(nome):
     max_level = cursor.fetchone()[0] or 0
 
     cursor.execute(
-        "INSERT INTO positions (name, level) VALUES (%s, %s)",
-        (nome, max_level + 1)
+      "INSERT INTO positions (name, level) VALUES (%s, %s)",
+      (nome, max_level + 1)
     )
     conn.commit()
     ok = True
